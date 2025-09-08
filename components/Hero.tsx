@@ -76,12 +76,12 @@ export default function Hero() {
                 </button>
               </Link>
 
-              <button
+              {/* <button
                 className="border-2 border-yellow-400 hover:border-yellow-500 text-yellow-600 hover:text-yellow-700 font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-yellow-50"
                 aria-label="View example storybooks"
               >
                 See Examples
-              </button>
+              </button> */}
             </div>
           </div>
 
