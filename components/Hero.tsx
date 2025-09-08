@@ -1,5 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -65,13 +66,15 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button
-                className="group bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2"
-                aria-label="Start creating your child's personalized storybook"
-              >
-                Create Your Story
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              <Link href="/create">
+                <button
+                  className="group bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2"
+                  aria-label="Start creating your child's personalized storybook"
+                >
+                  Create Your Story
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
 
               <button
                 className="border-2 border-yellow-400 hover:border-yellow-500 text-yellow-600 hover:text-yellow-700 font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-yellow-50"
