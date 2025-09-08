@@ -1,6 +1,29 @@
+"use client";
+
+import { StoredStory } from "@/lib/story-storage";
 import { BookOpen, Sparkles, Wand2 } from "lucide-react";
+import { useState } from "react";
+import StoriesList from "./StoriesList";
+import StoryBookPreview from "./StoryBookPreview";
+import StoryForm from "./StoryForm";
 
 export default function ProductDemo() {
+  const [selectedStory, setSelectedStory] = useState<StoredStory | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleStoryCreated = (story: StoredStory) => {
+    setSelectedStory(story);
+    setIsPreviewOpen(true);
+    // Trigger a refresh of the stories list
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    setSelectedStory(null);
+  };
+
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -101,6 +124,22 @@ export default function ProductDemo() {
           </div>
         </div>
 
+        {/* Interactive Story Creation */}
+        <div className="grid lg:grid-cols-2 gap-8 mb-16">
+          <div>
+            <h3 className="text-2xl font-bold text-slate-800 mb-6">
+              Create Your Story
+            </h3>
+            <StoryForm onStoryCreated={handleStoryCreated} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-slate-800 mb-6">
+              Your Stories
+            </h3>
+            <StoriesList key={refreshKey} />
+          </div>
+        </div>
+
         {/* Sample Book Preview */}
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-3xl p-8 lg:p-12">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -188,6 +227,23 @@ export default function ProductDemo() {
           </div>
         </div>
       </div>
+
+      {/* Story Preview Modal */}
+      {selectedStory && (
+        <StoryBookPreview
+          story={selectedStory}
+          isOpen={isPreviewOpen}
+          onClose={handleClosePreview}
+          onRegenerate={() => {
+            // TODO: Implement regeneration logic
+            console.log("Regenerate story:", selectedStory.id);
+          }}
+          onDownload={() => {
+            // TODO: Implement download logic
+            console.log("Download story:", selectedStory.id);
+          }}
+        />
+      )}
     </section>
   );
 }

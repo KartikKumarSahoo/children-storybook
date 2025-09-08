@@ -1,6 +1,6 @@
 "use client";
 
-import { storyStorage } from "@/lib/story-storage";
+import { StoredStory, storyStorage } from "@/lib/story-storage";
 import { Calendar, Heart, Palette, Sparkles, Star, User } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,7 +19,11 @@ export interface StoryFormData {
   storyLength: string;
 }
 
-export default function StoryForm() {
+interface StoryFormProps {
+  onStoryCreated?: (story: StoredStory) => void;
+}
+
+export default function StoryForm({ onStoryCreated }: StoryFormProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const {
@@ -111,11 +115,18 @@ export default function StoryForm() {
 
           console.log("Story saved to IndexedDB with ID:", storyId);
 
-          // TODO: Redirect to preview page with story ID
-          // For now, just show success message
-          alert(
-            `Story "${result.story.title}" generated and saved successfully! Preview page coming soon. Story ID: ${storyId}`
-          );
+          // Get the complete story object to pass to the callback
+          const savedStory = await storyStorage.getStory(storyId);
+
+          if (savedStory && onStoryCreated) {
+            // Call the callback to trigger preview
+            onStoryCreated(savedStory);
+          } else {
+            // Fallback: show success message if no callback provided
+            alert(
+              `Story "${result.story.title}" generated and saved successfully! Story ID: ${storyId}`
+            );
+          }
         } catch (storageError) {
           console.error("Error saving to IndexedDB:", storageError);
           // Fallback: still show success but mention storage issue

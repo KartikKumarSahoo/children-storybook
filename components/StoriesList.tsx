@@ -1,11 +1,25 @@
 "use client";
 
 import { useStoredStories } from "@/hooks/useStoryStorage";
-import { storyStorage } from "@/lib/story-storage";
-import { BookOpen, Calendar, Trash2, User } from "lucide-react";
+import { StoredStory, storyStorage } from "@/lib/story-storage";
+import { BookOpen, Calendar, Eye, Trash2, User } from "lucide-react";
+import { useState } from "react";
+import StoryBookPreview from "./StoryBookPreview";
 
 export default function StoriesList() {
   const { stories, isLoading, error, refresh } = useStoredStories();
+  const [selectedStory, setSelectedStory] = useState<StoredStory | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const handlePreviewStory = (story: StoredStory) => {
+    setSelectedStory(story);
+    setIsPreviewOpen(true);
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    setSelectedStory(null);
+  };
 
   const handleDeleteStory = async (storyId: string, storyTitle: string) => {
     if (confirm(`Are you sure you want to delete "${storyTitle}"?`)) {
@@ -103,12 +117,10 @@ export default function StoriesList() {
 
               <div className="flex items-center gap-2 ml-4">
                 <button
-                  onClick={() => {
-                    // TODO: Navigate to preview page
-                    alert(`Preview for "${story.title}" - Coming soon!`);
-                  }}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => handlePreviewStory(story)}
+                  className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                 >
+                  <Eye className="w-4 h-4" />
                   View
                 </button>
                 <button
@@ -123,6 +135,23 @@ export default function StoriesList() {
           </div>
         ))}
       </div>
+
+      {/* Story Preview Modal */}
+      {selectedStory && (
+        <StoryBookPreview
+          story={selectedStory}
+          isOpen={isPreviewOpen}
+          onClose={handleClosePreview}
+          onRegenerate={() => {
+            // TODO: Implement regeneration logic
+            console.log("Regenerate story:", selectedStory.id);
+          }}
+          onDownload={() => {
+            // TODO: Implement download logic
+            console.log("Download story:", selectedStory.id);
+          }}
+        />
+      )}
     </div>
   );
 }
