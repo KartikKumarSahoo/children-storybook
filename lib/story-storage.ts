@@ -155,6 +155,35 @@ class StoryStorage {
     });
   }
 
+  async updateStory(id: string, updates: Partial<StoredStory>): Promise<void> {
+    const story = await this.getStory(id);
+    if (!story) {
+      throw new Error("Story not found");
+    }
+
+    const updatedStory = {
+      ...story,
+      ...updates,
+      id, // Ensure ID doesn't change
+      createdAt: story.createdAt, // Preserve original creation date
+    };
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      const request = store.put(updatedStory);
+
+      request.onsuccess = () => {
+        console.log("Story updated in IndexedDB:", id);
+        resolve();
+      };
+
+      request.onerror = () => {
+        reject(new Error("Failed to update story in IndexedDB"));
+      };
+    });
+  }
+
   async updateStoryImages(id: string, images: string[]): Promise<void> {
     const story = await this.getStory(id);
     if (!story) {

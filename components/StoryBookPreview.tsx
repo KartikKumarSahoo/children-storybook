@@ -6,10 +6,11 @@ import {
   ChevronRight,
   Download,
   Home,
-  RotateCcw,
+  Settings,
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import RegenerationControls from "./RegenerationControls";
 
 interface StoryBookPreviewProps {
   story: StoredStory;
@@ -29,9 +30,12 @@ export default function StoryBookPreview({
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(
     new Set()
   );
+  const [showRegenerationControls, setShowRegenerationControls] =
+    useState(false);
+  const [currentStory, setCurrentStory] = useState<StoredStory>(story);
 
   // Total pages including cover page
-  const totalPages = story.pages.length + 1; // +1 for cover page
+  const totalPages = currentStory.pages.length + 1; // +1 for cover page
 
   const nextPage = useCallback(() => {
     if (currentPage < totalPages - 1) {
@@ -84,20 +88,20 @@ export default function StoryBookPreview({
     <div className="h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex flex-col items-center justify-center text-white p-8 rounded-lg shadow-2xl">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-shadow-lg">
-          {story.title}
+          {currentStory.title}
         </h1>
         <div className="mb-6">
           <p className="text-lg md:text-xl opacity-90">
-            A Story About {story.childName}
+            A Story About {currentStory.childName}
           </p>
           <p className="text-sm md:text-base opacity-75 mt-2">
-            Age {story.childAge}
+            Age {currentStory.childAge}
           </p>
         </div>
         <div className="text-xs md:text-sm opacity-60 mt-8">
           <p>Created with AI • Personalized Story</p>
           <p className="mt-1">
-            {new Date(story.createdAt).toLocaleDateString()}
+            {new Date(currentStory.createdAt).toLocaleDateString()}
           </p>
         </div>
       </div>
@@ -105,7 +109,7 @@ export default function StoryBookPreview({
   );
 
   const renderStoryPage = (pageIndex: number) => {
-    const page = story.pages[pageIndex];
+    const page = currentStory.pages[pageIndex];
     const hasImage = page.imageUrl && !imageLoadErrors.has(pageIndex);
 
     return (
@@ -170,6 +174,21 @@ export default function StoryBookPreview({
     );
   };
 
+  const handleRegenerationComplete = (updatedStory: StoredStory) => {
+    setCurrentStory(updatedStory);
+    setImageLoadErrors(new Set()); // Reset image errors for new images
+    // Optionally call the parent's onRegenerate callback
+    if (onRegenerate) {
+      onRegenerate();
+    }
+  };
+
+  const handleRegenerationError = (error: string) => {
+    console.error("Regeneration error:", error);
+    // You could show a toast notification here
+    alert("Failed to regenerate content: " + error);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full h-[90vh] flex flex-col">
@@ -177,7 +196,7 @@ export default function StoryBookPreview({
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-4">
             <h2 className="text-xl font-bold text-gray-800 truncate">
-              {story.title}
+              {currentStory.title}
             </h2>
             <span className="text-sm text-gray-500">
               {currentPage === 0 ? "Cover" : `Page ${currentPage}`} of{" "}
@@ -186,16 +205,16 @@ export default function StoryBookPreview({
           </div>
 
           <div className="flex items-center space-x-2">
-            {onRegenerate && (
-              <button
-                onClick={onRegenerate}
-                className="flex items-center space-x-1 px-3 py-2 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-                title="Regenerate story"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span className="hidden sm:inline">Regenerate</span>
-              </button>
-            )}
+            <button
+              onClick={() =>
+                setShowRegenerationControls(!showRegenerationControls)
+              }
+              className="flex items-center space-x-1 px-3 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              title="Regeneration options"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Regenerate</span>
+            </button>
             <button
               onClick={() => {
                 /* TODO: Download functionality */
@@ -218,6 +237,17 @@ export default function StoryBookPreview({
             )}
           </div>
         </div>
+
+        {/* Regeneration Controls */}
+        {showRegenerationControls && (
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <RegenerationControls
+              story={currentStory}
+              onRegenerationComplete={handleRegenerationComplete}
+              onError={handleRegenerationError}
+            />
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 p-6">
