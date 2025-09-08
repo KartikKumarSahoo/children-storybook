@@ -1,13 +1,16 @@
 "use client";
 
+import { AGE_APPROPRIATE_VALUES, getAgeGroup } from "@/lib/predefined-values";
 import { StoredStory, storyStorage } from "@/lib/story-storage";
 import { Calendar, Heart, Palette, Sparkles, Star, User } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import LoadingOverlay from "./LoadingOverlay";
 
 export interface StoryFormData {
   childName: string;
   childAge: number;
+  pronoun: string;
   traits: string[];
   interests: string[];
   physicalTraits: {
@@ -36,6 +39,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
     defaultValues: {
       childName: "",
       childAge: 5,
+      pronoun: "she/her",
       traits: [],
       interests: [],
       physicalTraits: {
@@ -49,6 +53,17 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
   });
 
   const watchedValues = watch();
+
+  // Determine current age group and available options for selects
+  const currentAge = (watchedValues?.childAge as number) ?? 6;
+  const ageGroup = getAgeGroup(Number(currentAge));
+  const hairOptions =
+    AGE_APPROPRIATE_VALUES[ageGroup].physicalTraits.hairColors;
+  const eyeOptions = AGE_APPROPRIATE_VALUES[ageGroup].physicalTraits.eyeColors;
+  const colorOptions =
+    AGE_APPROPRIATE_VALUES[ageGroup].physicalTraits.favoriteColors;
+  const traitOptions = AGE_APPROPRIATE_VALUES[ageGroup].traits;
+  const interestOptions = AGE_APPROPRIATE_VALUES[ageGroup].interests;
 
   const handleAutoFill = async () => {
     try {
@@ -111,6 +126,8 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
             ),
             childName: data.childName,
             childAge: data.childAge,
+            pronoun: data.pronoun,
+            favoriteColor: data.physicalTraits.favoriteColor,
           });
 
           console.log("Story saved to IndexedDB with ID:", storyId);
@@ -159,7 +176,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
             Tell us about your child <span className="text-red-500">*</span>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             {/* Child Name */}
             <div>
               <label
@@ -174,7 +191,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 })}
                 type="text"
                 id="childName"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500"
                 placeholder="Enter your child's name"
               />
               {errors.childName && (
@@ -202,12 +219,38 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 id="childAge"
                 min="3"
                 max="12"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500"
                 placeholder="5"
               />
               {errors.childAge && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.childAge.message}
+                </p>
+              )}
+            </div>
+
+            {/* Pronoun */}
+            <div>
+              <label
+                htmlFor="pronoun"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Pronoun <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register("pronoun", {
+                  required: "Please select a pronoun",
+                })}
+                id="pronoun"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900"
+              >
+                <option value="he/him">He/Him</option>
+                <option value="she/her">She/Her</option>
+                <option value="they/them">They/Them</option>
+              </select>
+              {errors.pronoun && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.pronoun.message}
                 </p>
               )}
             </div>
@@ -242,14 +285,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 Personality Traits
               </label>
               <div className="space-y-2">
-                {[
-                  "brave",
-                  "curious",
-                  "kind",
-                  "funny",
-                  "creative",
-                  "adventurous",
-                ].map((trait) => (
+                {traitOptions.map((trait) => (
                   <label key={trait} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -258,7 +294,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700 capitalize">
-                      {trait}
+                      {trait.charAt(0).toUpperCase() + trait.slice(1)}
                     </span>
                   </label>
                 ))}
@@ -272,16 +308,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 Interests
               </label>
               <div className="space-y-2">
-                {[
-                  "dinosaurs",
-                  "space",
-                  "animals",
-                  "princesses",
-                  "superheroes",
-                  "sports",
-                  "music",
-                  "art",
-                ].map((interest) => (
+                {interestOptions.map((interest) => (
                   <label key={interest} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -290,7 +317,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700 capitalize">
-                      {interest}
+                      {interest.charAt(0).toUpperCase() + interest.slice(1)}
                     </span>
                   </label>
                 ))}
@@ -315,14 +342,14 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 <select
                   {...register("physicalTraits.hairColor")}
                   id="hairColor"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 >
                   <option value="">Select...</option>
-                  <option value="brown">Brown</option>
-                  <option value="blonde">Blonde</option>
-                  <option value="black">Black</option>
-                  <option value="red">Red</option>
-                  <option value="other">Other</option>
+                  {hairOptions.map((hc) => (
+                    <option key={hc} value={hc}>
+                      {hc.charAt(0).toUpperCase() + hc.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -335,14 +362,14 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 <select
                   {...register("physicalTraits.eyeColor")}
                   id="eyeColor"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 >
                   <option value="">Select...</option>
-                  <option value="brown">Brown</option>
-                  <option value="blue">Blue</option>
-                  <option value="green">Green</option>
-                  <option value="hazel">Hazel</option>
-                  <option value="gray">Gray</option>
+                  {eyeOptions.map((ec) => (
+                    <option key={ec} value={ec}>
+                      {ec.charAt(0).toUpperCase() + ec.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -355,16 +382,14 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
                 <select
                   {...register("physicalTraits.favoriteColor")}
                   id="favoriteColor"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 >
                   <option value="">Select...</option>
-                  <option value="red">Red</option>
-                  <option value="blue">Blue</option>
-                  <option value="green">Green</option>
-                  <option value="yellow">Yellow</option>
-                  <option value="purple">Purple</option>
-                  <option value="pink">Pink</option>
-                  <option value="orange">Orange</option>
+                  {colorOptions.map((cc) => (
+                    <option key={cc} value={cc}>
+                      {cc.charAt(0).toUpperCase() + cc.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -389,7 +414,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
               <select
                 {...register("storyTheme")}
                 id="storyTheme"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
                 <option value="adventure">Adventure</option>
                 <option value="friendship">Friendship</option>
@@ -407,7 +432,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
               <select
                 {...register("storyLength")}
                 id="storyLength"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
                 <option value="short">Short (6-8 pages)</option>
                 <option value="medium">Medium (10-12 pages)</option>
@@ -423,20 +448,17 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
             disabled={!isValid || isGenerating}
             className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:transform-none disabled:shadow-none flex items-center justify-center gap-2"
           >
-            {isGenerating ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Creating Your Story...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                Create My Story
-              </>
-            )}
+            <Sparkles className="w-5 h-5" />
+            {isGenerating ? "Creating..." : "Create My Story"}
           </button>
         </div>
       </form>
+
+      {/* Loading Overlay */}
+      <LoadingOverlay
+        isVisible={isGenerating}
+        message="Creating your magical story..."
+      />
     </div>
   );
 }

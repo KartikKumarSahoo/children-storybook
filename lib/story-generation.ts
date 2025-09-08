@@ -17,6 +17,7 @@ export function createStoryPrompt(formData: StoryFormData): string {
   const {
     childName,
     childAge,
+    pronoun,
     traits,
     interests,
     physicalTraits,
@@ -40,7 +41,7 @@ export function createStoryPrompt(formData: StoryFormData): string {
     .filter(Boolean)
     .join(", ");
 
-  return `Create a personalized children's storybook for ${childName}, a ${childAge}-year-old child who is ${traitsList} and loves ${interestsList}. ${
+  return `Create a personalized children's storybook for ${childName}, a ${childAge}-year-old child who is ${traitsList} and loves ${interestsList}. ${childName} uses ${pronoun} pronouns. ${
     physicalDesc ? `${childName} has ${physicalDesc}.` : ""
   }
 
@@ -49,13 +50,14 @@ STORY REQUIREMENTS:
 - Length: ${pageCount} pages
 - Age-appropriate for ${childAge} years old
 - ${childName} should be the main character and hero of the story
+- Use ${pronoun} pronouns consistently throughout the story
 - Include a positive message or lesson
 - Keep language simple and engaging for the target age
 
 FORMAT YOUR RESPONSE AS JSON:
 {
   "title": "Story title here",
-  "characterDescription": "Detailed description of ${childName}'s appearance for consistent image generation",
+  "characterDescription": "Detailed description of ${childName}'s appearance for consistent image generation, including that ${childName} uses ${pronoun} pronouns",
   "pages": [
     {
       "pageNumber": 1,
@@ -68,6 +70,7 @@ FORMAT YOUR RESPONSE AS JSON:
 
 IMPORTANT:
 - Each page should have 2-3 sentences maximum
+- Use ${pronoun} pronouns consistently when referring to ${childName}
 - Image prompts should be detailed scene descriptions that include ${childName} and the action/setting
 - Example: "${childName} standing in a magical forest with tall, glowing trees and colorful butterflies flying around"
 - Include specific details about the scene, lighting, and mood
@@ -144,7 +147,7 @@ export async function generateStory(
       ),
       characterDescription:
         storyData.characterDescription ||
-        `${formData.childName}, a ${formData.childAge}-year-old child`,
+        `${formData.childName}, a ${formData.childAge}-year-old child who uses ${formData.pronoun} pronouns`,
     };
   } catch (error) {
     console.error("Error generating story:", error);

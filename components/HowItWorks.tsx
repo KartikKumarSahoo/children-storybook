@@ -1,4 +1,5 @@
 import { BookOpen, Download, User, Wand2 } from "lucide-react";
+import Link from "next/link";
 
 export default function HowItWorks() {
   const steps = [
@@ -237,9 +238,12 @@ export default function HowItWorks() {
               Create your child&apos;s first personalized storybook in just a
               few minutes
             </p>
-            <button className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+            <Link
+              href="/create"
+              className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+            >
               Begin Your Story
-            </button>
+            </Link>
           </div>
         </div>
       </div>

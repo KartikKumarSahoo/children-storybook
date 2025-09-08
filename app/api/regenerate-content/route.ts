@@ -12,6 +12,7 @@ interface RegenerateContentRequest {
   modifiedParams?: {
     childName?: string;
     childAge?: number;
+    pronoun?: string;
     interests?: string[];
     storyTheme?: string;
     storyLength?: string;
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
         const modifiedFormData: StoryFormData = {
           childName: body.modifiedParams?.childName || originalStory.childName,
           childAge: body.modifiedParams?.childAge || originalStory.childAge,
+          pronoun: body.modifiedParams?.pronoun || originalStory.pronoun,
           traits: [],
           interests: body.modifiedParams?.interests || [],
           physicalTraits: {

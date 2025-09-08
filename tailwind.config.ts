@@ -7,7 +7,17 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        child: [
+          "Comic Sans MS",
+          "Marker Felt",
+          "Chalkduster",
+          "cursive",
+          "system-ui",
+        ],
+      },
+    },
   },
   plugins: [],
 };

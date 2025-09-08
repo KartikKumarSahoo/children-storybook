@@ -1,4 +1,5 @@
 import { ArrowRight, BookOpen, Heart, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function SecondaryCTA() {
   return (
@@ -16,10 +17,13 @@ export default function SecondaryCTA() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <button className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-full hover:bg-blue-50 transition-all duration-300 hover:scale-105 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600">
+              <Link
+                href="/create"
+                className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-full hover:bg-blue-50 transition-all duration-300 hover:scale-105 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+              >
                 Start Creating Now
                 <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
               <button className="border-2 border-white text-white font-semibold px-8 py-4 rounded-full hover:bg-white hover:text-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600">
                 View Sample Stories
               </button>
@@ -108,10 +112,13 @@ export default function SecondaryCTA() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold px-8 py-4 rounded-full hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                  <Link
+                    href="/create"
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold px-8 py-4 rounded-full hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                  >
                     Create Your Story Now
                     <ArrowRight className="w-5 h-5" />
-                  </button>
+                  </Link>
                   <button className="border-2 border-slate-300 text-slate-700 font-semibold px-8 py-4 rounded-full hover:border-slate-400 hover:bg-slate-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
                     See Pricing Plans
                   </button>

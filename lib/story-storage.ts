@@ -16,6 +16,8 @@ export interface StoredStory {
   createdAt: Date;
   childName: string;
   childAge: number;
+  pronoun: string;
+  favoriteColor?: string;
 }
 
 class StoryStorage {

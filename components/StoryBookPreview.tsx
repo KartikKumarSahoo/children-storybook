@@ -5,8 +5,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Home,
-  Settings,
+  RefreshCw,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
@@ -84,17 +84,60 @@ export default function StoryBookPreview({
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [nextPage, prevPage, onClose]);
 
+  // Function to generate dynamic background gradient based on favorite color
+  const getBackgroundGradient = (favoriteColor?: string) => {
+    if (!favoriteColor) {
+      // Fallback to default gradient
+      return "bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500";
+    }
+
+    const color = favoriteColor.toLowerCase();
+
+    // Color-specific gradients
+    const colorGradients: { [key: string]: string } = {
+      red: "bg-gradient-to-br from-red-400 via-pink-500 to-rose-500",
+      blue: "bg-gradient-to-br from-blue-400 via-cyan-500 to-indigo-500",
+      green: "bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500",
+      yellow: "bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-500",
+      purple: "bg-gradient-to-br from-purple-400 via-violet-500 to-fuchsia-500",
+      pink: "bg-gradient-to-br from-pink-400 via-rose-500 to-red-400",
+      orange: "bg-gradient-to-br from-orange-400 via-red-500 to-pink-500",
+      black: "bg-gradient-to-br from-gray-700 via-slate-800 to-black",
+      white: "bg-gradient-to-br from-gray-100 via-slate-200 to-gray-300",
+      brown: "bg-gradient-to-br from-amber-600 via-orange-700 to-red-800",
+      gray: "bg-gradient-to-br from-gray-400 via-slate-500 to-gray-600",
+      turquoise: "bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500",
+      lime: "bg-gradient-to-br from-lime-400 via-green-500 to-emerald-500",
+      indigo: "bg-gradient-to-br from-indigo-400 via-purple-500 to-violet-500",
+      coral: "bg-gradient-to-br from-orange-400 via-red-400 to-pink-500",
+      gold: "bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500",
+      silver: "bg-gradient-to-br from-gray-300 via-slate-400 to-gray-500",
+      magenta: "bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-500",
+      cyan: "bg-gradient-to-br from-cyan-400 via-teal-500 to-blue-500",
+      violet: "bg-gradient-to-br from-violet-400 via-purple-500 to-indigo-500",
+    };
+
+    return (
+      colorGradients[color] ||
+      "bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500"
+    );
+  };
+
   const renderCoverPage = () => (
-    <div className="h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex flex-col items-center justify-center text-white p-8 rounded-lg shadow-2xl">
+    <div
+      className={`h-full ${getBackgroundGradient(
+        currentStory.favoriteColor
+      )} flex flex-col items-center justify-center text-white p-8 rounded-lg shadow-2xl`}
+    >
       <div className="text-center">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-shadow-lg">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-shadow-lg font-child">
           {currentStory.title}
         </h1>
         <div className="mb-6">
-          <p className="text-lg md:text-xl opacity-90">
+          <p className="text-lg md:text-xl opacity-90 font-child">
             A Story About {currentStory.childName}
           </p>
-          <p className="text-sm md:text-base opacity-75 mt-2">
+          <p className="text-sm md:text-base opacity-75 mt-2 font-child">
             Age {currentStory.childAge}
           </p>
         </div>
@@ -164,7 +207,7 @@ export default function StoryBookPreview({
               Page {page.pageNumber}
             </div>
             <div className="prose prose-lg max-w-none">
-              <p className="text-gray-800 leading-relaxed text-lg lg:text-xl font-serif">
+              <p className="text-gray-800 leading-relaxed text-xl lg:text-2xl xl:text-3xl font-bold tracking-wide font-child">
                 {page.text}
               </p>
             </div>
@@ -187,6 +230,191 @@ export default function StoryBookPreview({
     console.error("Regeneration error:", error);
     // You could show a toast notification here
     alert("Failed to regenerate content: " + error);
+  };
+
+  const handleDownload = async () => {
+    try {
+      // Create a simple HTML version of the storybook for download
+      const htmlContent = generateStoryHTML();
+
+      // Create a blob with the HTML content
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+
+      // Create a temporary download link
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${currentStory.title.replace(
+        /[^a-z0-9]/gi,
+        "_"
+      )}_storybook.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the URL
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download storybook. Please try again.");
+    }
+  };
+
+  const generateStoryHTML = () => {
+    const coverPageHTML = `
+      <div style="
+        min-height: 100vh; 
+        background: linear-gradient(135deg, 
+          ${getGradientColors(currentStory.favoriteColor).from}, 
+          ${getGradientColors(currentStory.favoriteColor).via}, 
+          ${getGradientColors(currentStory.favoriteColor).to}); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        color: white; 
+        text-align: center; 
+        padding: 2rem;
+        page-break-after: always;
+      ">
+        <div>
+          <h1 style="font-size: 3rem; font-weight: bold; margin-bottom: 1rem; font-family: 'Comic Sans MS', cursive;">
+            ${currentStory.title}
+          </h1>
+          <p style="font-size: 1.5rem; margin-bottom: 0.5rem; font-family: 'Comic Sans MS', cursive;">
+            A Story About ${currentStory.childName}
+          </p>
+          <p style="font-size: 1.25rem; margin-bottom: 2rem; font-family: 'Comic Sans MS', cursive;">
+            Age ${currentStory.childAge}
+          </p>
+          <p style="font-size: 0.875rem; opacity: 0.8;">
+            Created with AI • Personalized Story<br>
+            ${new Date(currentStory.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
+    `;
+
+    const pagesHTML = currentStory.pages
+      .map(
+        (page) => `
+      <div style="
+        min-height: 100vh; 
+        display: flex; 
+        align-items: center; 
+        padding: 2rem;
+        page-break-after: always;
+        background: white;
+      ">
+        <div style="width: 50%; padding-right: 2rem;">
+          ${
+            page.imageUrl
+              ? `
+            <img src="${page.imageUrl}" 
+                 alt="Illustration for page ${page.pageNumber}" 
+                 style="width: 100%; height: auto; border-radius: 8px;" />
+          `
+              : `
+            <div style="
+              width: 100%; 
+              height: 300px; 
+              background: linear-gradient(135deg, #f3f4f6, #e5e7eb); 
+              border-radius: 8px; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              color: #6b7280;
+            ">
+              <p>Illustration for Page ${page.pageNumber}</p>
+            </div>
+          `
+          }
+        </div>
+        <div style="width: 50%; padding-left: 2rem;">
+          <div style="text-align: right; font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">
+            Page ${page.pageNumber}
+          </div>
+          <p style="
+            font-size: 1.5rem; 
+            line-height: 1.8; 
+            font-weight: bold; 
+            letter-spacing: 0.025em; 
+            color: #1f2937;
+            font-family: 'Comic Sans MS', cursive;
+          ">
+            ${page.text}
+          </p>
+        </div>
+      </div>
+    `
+      )
+      .join("");
+
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${currentStory.title}</title>
+        <style>
+          @page {
+            margin: 0;
+            size: A4;
+          }
+          body {
+            margin: 0;
+            font-family: 'Comic Sans MS', cursive, system-ui;
+          }
+          @media print {
+            .page-break {
+              page-break-after: always;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${coverPageHTML}
+        ${pagesHTML}
+      </body>
+      </html>
+    `;
+  };
+
+  const getGradientColors = (favoriteColor?: string) => {
+    if (!favoriteColor) {
+      return { from: "#60a5fa", via: "#a855f7", to: "#ec4899" };
+    }
+
+    const color = favoriteColor.toLowerCase();
+
+    const colorMappings: {
+      [key: string]: { from: string; via: string; to: string };
+    } = {
+      red: { from: "#f87171", via: "#f472b6", to: "#fb7185" },
+      blue: { from: "#60a5fa", via: "#22d3ee", to: "#6366f1" },
+      green: { from: "#4ade80", via: "#10b981", to: "#14b8a6" },
+      yellow: { from: "#facc15", via: "#f59e0b", to: "#f97316" },
+      purple: { from: "#a78bfa", via: "#8b5cf6", to: "#d946ef" },
+      pink: { from: "#f472b6", via: "#fb7185", to: "#f87171" },
+      orange: { from: "#fb923c", via: "#ef4444", to: "#f472b6" },
+      black: { from: "#374151", via: "#1e293b", to: "#000000" },
+      white: { from: "#f3f4f6", via: "#e2e8f0", to: "#d1d5db" },
+      brown: { from: "#d97706", via: "#ea580c", to: "#dc2626" },
+      gray: { from: "#9ca3af", via: "#64748b", to: "#6b7280" },
+      turquoise: { from: "#2dd4bf", via: "#22d3ee", to: "#3b82f6" },
+      lime: { from: "#a3e635", via: "#22c55e", to: "#10b981" },
+      indigo: { from: "#818cf8", via: "#a855f7", to: "#8b5cf6" },
+      coral: { from: "#fb923c", via: "#f87171", to: "#f472b6" },
+      gold: { from: "#fde047", via: "#fbbf24", to: "#f97316" },
+      silver: { from: "#d1d5db", via: "#94a3b8", to: "#9ca3af" },
+      magenta: { from: "#e879f9", via: "#f472b6", to: "#fb7185" },
+      cyan: { from: "#22d3ee", via: "#14b8a6", to: "#3b82f6" },
+      violet: { from: "#8b5cf6", via: "#a855f7", to: "#6366f1" },
+    };
+
+    return (
+      colorMappings[color] || { from: "#60a5fa", via: "#a855f7", to: "#ec4899" }
+    );
   };
 
   return (
@@ -212,13 +440,11 @@ export default function StoryBookPreview({
               className="flex items-center space-x-1 px-3 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               title="Regeneration options"
             >
-              <Settings className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4" />
               <span className="hidden sm:inline">Regenerate</span>
             </button>
             <button
-              onClick={() => {
-                /* TODO: Download functionality */
-              }}
+              onClick={handleDownload}
               className="flex items-center space-x-1 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               title="Download story"
             >
@@ -228,10 +454,10 @@ export default function StoryBookPreview({
             {onClose && (
               <button
                 onClick={onClose}
-                className="flex items-center space-x-1 px-3 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex items-center space-x-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 title="Close preview"
               >
-                <Home className="w-4 h-4" />
+                <X className="w-4 h-4" />
                 <span className="hidden sm:inline">Close</span>
               </button>
             )}

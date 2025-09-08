@@ -28,8 +28,14 @@ export class RegenerationCache {
   private readonly STORAGE_KEY = "storybook_regeneration_cache";
 
   constructor() {
-    this.loadFromStorage();
-    this.startCleanupInterval();
+    // Only attempt to load/save from localStorage and start intervals in a browser
+    if (
+      typeof window !== "undefined" &&
+      typeof window.localStorage !== "undefined"
+    ) {
+      this.loadFromStorage();
+      this.startCleanupInterval();
+    }
   }
 
   /**
@@ -202,8 +208,15 @@ export class RegenerationCache {
    * Load cache from localStorage
    */
   private loadFromStorage(): void {
+    if (
+      typeof window === "undefined" ||
+      typeof window.localStorage === "undefined"
+    ) {
+      return;
+    }
+
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = window.localStorage.getItem(this.STORAGE_KEY);
       if (!stored) return;
 
       const entries: RegenerationCacheEntry[] = JSON.parse(stored);
@@ -225,9 +238,16 @@ export class RegenerationCache {
    * Save cache to localStorage
    */
   private saveToStorage(): void {
+    if (
+      typeof window === "undefined" ||
+      typeof window.localStorage === "undefined"
+    ) {
+      return;
+    }
+
     try {
       const entries = Array.from(this.memoryCache.values());
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(entries));
+      window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify(entries));
     } catch (error) {
       console.warn("Failed to save regeneration cache to storage:", error);
     }
@@ -237,8 +257,15 @@ export class RegenerationCache {
    * Clear cache from localStorage
    */
   private clearStorage(): void {
+    if (
+      typeof window === "undefined" ||
+      typeof window.localStorage === "undefined"
+    ) {
+      return;
+    }
+
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      window.localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
       console.warn("Failed to clear regeneration cache from storage:", error);
     }

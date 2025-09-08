@@ -7,9 +7,9 @@ export async function POST(request: NextRequest) {
     const formData: StoryFormData = await request.json();
 
     // Validate required fields
-    if (!formData.childName || !formData.childAge) {
+    if (!formData.childName || !formData.childAge || !formData.pronoun) {
       return NextResponse.json(
-        { error: "Child name and age are required" },
+        { error: "Child name, age, and pronoun are required" },
         { status: 400 }
       );
     }
