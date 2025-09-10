@@ -1,8 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Children's Storybook Creator
+
+This is a [Next.js](https://nextjs.org) project that creates personalized children's storybooks using AI. The application generates custom stories and illustrations based on child-specific details like name, age, interests, and physical traits.
+
+## Features
+
+- **Personalized Story Generation**: Creates custom stories featuring the child as the main character
+- **AI-Powered Illustrations**: Generates images using either Google's Imagen model or Gemini's image generation capabilities
+- **Character Consistency**: Maintains consistent character appearance throughout the story
+- **Flexible Configuration**: Switch between different AI models for image generation
+
+## Environment Setup
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Google Gemini API Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Image Generation Settings
+ENABLE_IMAGE_GENERATION_WITH_IMAGEN=true  # Set to 'true' to use Imagen, 'false' for Gemini
+```
+
+### Image Generation Models
+
+The application supports two image generation approaches:
+
+1. **Imagen Model** (Recommended): High-quality, specialized image generation model
+   - Set `ENABLE_IMAGE_GENERATION_WITH_IMAGEN=true`
+   - Uses `imagen-4.0-generate-001` model
+   - Optimized for children's book illustrations
+
+2. **Gemini 2.5 Flash Image Preview** (Default): Built-in Gemini multimodal capabilities
+   - Set `ENABLE_IMAGE_GENERATION_WITH_IMAGEN=false`
+   - Uses `gemini-2.5-flash-image-preview` model
+   - Fallback option when Imagen is not available
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev

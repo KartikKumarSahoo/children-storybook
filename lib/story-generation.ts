@@ -1,5 +1,5 @@
 import { StoryFormData } from "@/components/StoryForm";
-import { getTextModel, IMAGE_CONFIG } from "./genai-client";
+import { getTextModel, IMAGE_CONFIG, IMAGEN_CONFIG, shouldUseImagen } from "./genai-client";
 
 export interface StoryPage {
   pageNumber: number;
@@ -84,27 +84,10 @@ export function createCharacterConsistencyPrompt(
   characterDescription: string,
   sceneDescription: string
 ): string {
-  return `Create a high-quality children's book illustration showing ${sceneDescription}. 
+  // Enhanced prompt for better Imagen results
+  return `A beautiful children's book illustration of ${sceneDescription}. ${characterDescription}. 
 
-CHARACTER DETAILS: ${characterDescription}
-
-ILLUSTRATION STYLE:
-- Bright, colorful, and cheerful children's book illustration style
-- Soft, gentle lighting that creates a warm, inviting atmosphere
-- Child-friendly and age-appropriate content
-- Clear, simple composition perfect for a storybook page
-- Professional children's book artwork quality
-- Focus on positive emotions and expressions
-
-TECHNICAL REQUIREMENTS:
-- High resolution, suitable for print
-- Clean, crisp details with good contrast
-- Composition should work well on a book page
-- Avoid scary, dark, or inappropriate content
-- Use vibrant but harmonious colors
-- Maintain consistency with the character's appearance throughout
-
-Create this as a single, beautiful illustration suitable for a children's storybook.`;
+Style: Bright, colorful, cheerful children's book illustration with soft lighting, vibrant harmonious colors, clean composition perfect for a storybook page. Professional children's book artwork quality with positive emotions. Child-friendly and age-appropriate content. High-quality, detailed illustration suitable for print.`;
 }
 
 export async function generateStory(
@@ -158,6 +141,8 @@ export async function generateStory(
 export async function generateImages(story: GeneratedStory): Promise<string[]> {
   try {
     const models = getTextModel();
+    const useImagen = shouldUseImagen();
+    
     const imagePromises = story.pages.map(async (page) => {
       const prompt = createCharacterConsistencyPrompt(
         story.characterDescription,
@@ -165,23 +150,42 @@ export async function generateImages(story: GeneratedStory): Promise<string[]> {
       );
 
       try {
-        console.log(`Generating image for page ${page.pageNumber}...`);
+        console.log(`Generating image for page ${page.pageNumber} using ${useImagen ? 'Imagen' : 'Gemini'}...`);
 
-        // Use Gemini 2.5 Flash Image Preview (nano banana) for image generation
-        const result = await models.generateContent({
-          model: IMAGE_CONFIG.model,
-          contents: prompt,
-        });
+        if (useImagen) {
+          // Use Imagen model for high-quality image generation
+          const result = await models.generateImages({
+            model: IMAGEN_CONFIG.model,
+            prompt: prompt,
+            config: IMAGEN_CONFIG.config,
+          });
 
-        // Check if the response contains image data
-        if (result.candidates && result.candidates[0]?.content?.parts) {
-          for (const part of result.candidates[0].content.parts) {
-            if (part.inlineData && part.inlineData.data) {
+          if (result.generatedImages && result.generatedImages.length > 0) {
+            const generatedImage = result.generatedImages[0];
+            if (generatedImage.image && generatedImage.image.imageBytes) {
               // Convert base64 image data to data URL
-              const mimeType = part.inlineData.mimeType || "image/png";
-              const imageDataUrl = `data:${mimeType};base64,${part.inlineData.data}`;
-              console.log(`Generated image for page ${page.pageNumber}`);
+              const imageDataUrl = `data:image/png;base64,${generatedImage.image.imageBytes}`;
+              console.log(`Generated image with Imagen for page ${page.pageNumber}`);
               return imageDataUrl;
+            }
+          }
+        } else {
+          // Use Gemini 2.5 Flash Image Preview (nano banana) for image generation
+          const result = await models.generateContent({
+            model: IMAGE_CONFIG.model,
+            contents: prompt,
+          });
+
+          // Check if the response contains image data
+          if (result.candidates && result.candidates[0]?.content?.parts) {
+            for (const part of result.candidates[0].content.parts) {
+              if (part.inlineData && part.inlineData.data) {
+                // Convert base64 image data to data URL
+                const mimeType = part.inlineData.mimeType || "image/png";
+                const imageDataUrl = `data:${mimeType};base64,${part.inlineData.data}`;
+                console.log(`Generated image with Gemini for page ${page.pageNumber}`);
+                return imageDataUrl;
+              }
             }
           }
         }
