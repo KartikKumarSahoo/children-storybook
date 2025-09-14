@@ -8,6 +8,38 @@ export interface PreDefinedValues {
   };
 }
 
+// Unified physicalTraits for all age groups
+const UNIFIED_PHYSICAL_TRAITS = {
+  hairColors: [
+    "brown",
+    "blonde",
+    "black",
+    "red",
+    "dark brown",
+    "light brown"
+  ],
+  eyeColors: [
+    "black",
+    "brown",
+    "blue",
+    "green",
+    "hazel",
+    "gray",
+    "amber"
+  ],
+  favoriteColors: [
+    "red",
+    "blue",
+    "yellow",
+    "pink",
+    "green",
+    "purple",
+    "orange",
+    "teal",
+    "black"
+  ]
+};
+
 export const AGE_APPROPRIATE_VALUES: Record<string, PreDefinedValues> = {
   // Ages 3-5: Simple, gentle traits and interests
   "3-5": {
@@ -22,11 +54,7 @@ export const AGE_APPROPRIATE_VALUES: Record<string, PreDefinedValues> = {
       "books",
       "dancing",
     ],
-    physicalTraits: {
-      hairColors: ["brown", "blonde", "black", "red"],
-      eyeColors: ["brown", "blue", "green", "hazel"],
-      favoriteColors: ["red", "blue", "yellow", "pink", "green", "purple"],
-    },
+    physicalTraits: UNIFIED_PHYSICAL_TRAITS,
   },
 
   // Ages 6-8: More complex interests and social traits
@@ -53,19 +81,7 @@ export const AGE_APPROPRIATE_VALUES: Record<string, PreDefinedValues> = {
       "cooking",
       "nature",
     ],
-    physicalTraits: {
-      hairColors: ["brown", "blonde", "black", "red", "dark brown"],
-      eyeColors: ["brown", "blue", "green", "hazel", "gray"],
-      favoriteColors: [
-        "red",
-        "blue",
-        "green",
-        "purple",
-        "pink",
-        "orange",
-        "yellow",
-      ],
-    },
+    physicalTraits: UNIFIED_PHYSICAL_TRAITS,
   },
 
   // Ages 9-12: Advanced interests and personality traits
@@ -93,28 +109,7 @@ export const AGE_APPROPRIATE_VALUES: Record<string, PreDefinedValues> = {
       "mystery",
       "adventure",
     ],
-    physicalTraits: {
-      hairColors: [
-        "brown",
-        "blonde",
-        "black",
-        "red",
-        "dark brown",
-        "light brown",
-      ],
-      eyeColors: ["brown", "blue", "green", "hazel", "gray", "amber"],
-      favoriteColors: [
-        "red",
-        "blue",
-        "green",
-        "purple",
-        "pink",
-        "orange",
-        "yellow",
-        "teal",
-        "black",
-      ],
-    },
+    physicalTraits: UNIFIED_PHYSICAL_TRAITS,
   },
 };
 

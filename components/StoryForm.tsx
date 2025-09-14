@@ -38,7 +38,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
   } = useForm<StoryFormData>({
     defaultValues: {
       childName: "",
-      childAge: 5,
+      childAge: "" as any, // Start with empty selection
       pronoun: "she/her",
       traits: [],
       interests: [],
@@ -55,8 +55,8 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
   const watchedValues = watch();
 
   // Determine current age group and available options for selects
-  const currentAge = (watchedValues?.childAge as number) ?? 6;
-  const ageGroup = getAgeGroup(Number(currentAge));
+  const currentAge = Number(watchedValues?.childAge) || 6; // Default to 6 if no age selected
+  const ageGroup = getAgeGroup(currentAge);
   const hairOptions =
     AGE_APPROPRIATE_VALUES[ageGroup].physicalTraits.hairColors;
   const eyeOptions = AGE_APPROPRIATE_VALUES[ageGroup].physicalTraits.eyeColors;
@@ -209,19 +209,27 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
               >
                 Age <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 {...register("childAge", {
-                  required: "Please enter your child's age",
-                  min: { value: 3, message: "Age must be at least 3" },
-                  max: { value: 12, message: "Age must be 12 or under" },
+                  required: "Please select your child's age",
+                  validate: (value) => {
+                    const age = Number(value);
+                    if (isNaN(age) || age < 3 || age > 12) {
+                      return "Age must be between 3 and 12";
+                    }
+                    return true;
+                  },
                 })}
-                type="number"
                 id="childAge"
-                min="3"
-                max="12"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500"
-                placeholder="5"
-              />
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900"
+              >
+                <option value="">Select age</option>
+                {Array.from({ length: 10 }, (_, i) => i + 3).map((age) => (
+                  <option key={age} value={age}>
+                    {age} years old
+                  </option>
+                ))}
+              </select>
               {errors.childAge && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.childAge.message}
@@ -280,7 +288,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
           <div className="grid sm:grid-cols-2 gap-6">
             {/* Personality Traits */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-md font-bold text-gray-700 mb-2">
                 <Heart className="w-4 h-4 inline mr-1" />
                 Personality Traits
               </label>
@@ -303,7 +311,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
 
             {/* Interests */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-md font-bold text-gray-700 mb-2">
                 <Star className="w-4 h-4 inline mr-1" />
                 Interests
               </label>
@@ -436,6 +444,7 @@ export default function StoryForm({ onStoryCreated }: StoryFormProps) {
               >
                 <option value="short">Short (6-8 pages)</option>
                 <option value="medium">Medium (10-12 pages)</option>
+                <option value="large" disabled>Large (16-20 pages) — Paid only</option>
               </select>
             </div>
           </div>

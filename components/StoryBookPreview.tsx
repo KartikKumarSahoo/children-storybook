@@ -262,7 +262,7 @@ export default function StoryBookPreview({
 
   const generateStoryHTML = () => {
     const coverPageHTML = `
-      <div style="
+      <div class="page cover-page" data-page="0" style="
         min-height: 100vh; 
         background: linear-gradient(135deg, 
           ${getGradientColors(currentStory.favoriteColor).from}, 
@@ -274,7 +274,7 @@ export default function StoryBookPreview({
         color: white; 
         text-align: center; 
         padding: 2rem;
-        page-break-after: always;
+        position: relative;
       ">
         <div>
           <h1 style="font-size: 3rem; font-weight: bold; margin-bottom: 1rem; font-family: 'Comic Sans MS', cursive;">
@@ -291,27 +291,33 @@ export default function StoryBookPreview({
             ${new Date(currentStory.createdAt).toLocaleDateString()}
           </p>
         </div>
+        
+        <!-- Turn page hint for cover -->
+        <div class="turn-hint" style="
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(255,255,255,0.2);
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          animation: bounce 2s infinite;
+        ">
+          👉 Swipe or click to turn page
+        </div>
       </div>
     `;
 
     const pagesHTML = currentStory.pages
       .map(
-        (page) => `
-      <div style="
-        min-height: 100vh; 
-        display: flex; 
-        align-items: center; 
-        padding: 2rem;
-        page-break-after: always;
-        background: white;
-      ">
-        <div style="width: 50%; padding-right: 2rem;">
+        (page, index) => `
+      <div class="page story-page" data-page="${index + 1}">
+        <div class="image-section">
           ${
             page.imageUrl
               ? `
             <img src="${page.imageUrl}" 
-                 alt="Illustration for page ${page.pageNumber}" 
-                 style="width: 100%; height: auto; border-radius: 8px;" />
+                 alt="Illustration for page ${page.pageNumber}" />
           `
               : `
             <div style="
@@ -329,7 +335,7 @@ export default function StoryBookPreview({
           `
           }
         </div>
-        <div style="width: 50%; padding-left: 2rem;">
+        <div class="text-section">
           <div style="text-align: right; font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">
             Page ${page.pageNumber}
           </div>
@@ -344,6 +350,22 @@ export default function StoryBookPreview({
             ${page.text}
           </p>
         </div>
+        
+        ${index === 0 ? `
+        <!-- Turn page hint for first story page -->
+        <div class="turn-hint" style="
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          background: rgba(0,0,0,0.1);
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          animation: bounce 2s infinite;
+        ">
+          👉 Keep swiping to read more
+        </div>
+        ` : ''}
       </div>
     `
       )
@@ -357,24 +379,413 @@ export default function StoryBookPreview({
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${currentStory.title}</title>
         <style>
-          @page {
+          * {
             margin: 0;
-            size: A4;
+            padding: 0;
+            box-sizing: border-box;
           }
+          
           body {
-            margin: 0;
             font-family: 'Comic Sans MS', cursive, system-ui;
+            overflow: hidden;
+            background: #f0f0f0;
+            height: 100vh;
+            width: 100vw;
           }
-          @media print {
-            .page-break {
-              page-break-after: always;
+          
+          .storybook-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          }
+          
+          .page {
+            min-width: 100vw;
+            width: 100vw;
+            height: 100vh;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+          }
+          
+          .page.turning {
+            transform: scale(0.95);
+            filter: brightness(0.9);
+            z-index: 10;
+          }
+          
+          .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 25px;
+            z-index: 1000;
+            gap: 15px;
+          }
+          
+          .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            min-width: 40px;
+          }
+          
+          .nav-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+          }
+          
+          .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+          }
+          
+          .page-indicator {
+            color: white;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: center;
+          }
+          
+          .page-dots {
+            display: flex;
+            gap: 5px;
+          }
+          
+          .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+          }
+          
+          .dot.active {
+            background: white;
+            transform: scale(1.2);
+          }
+          
+          @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+              transform: translateY(0);
+            }
+            40% {
+              transform: translateY(-10px);
+            }
+            60% {
+              transform: translateY(-5px);
+            }
+          }
+          
+          .turn-hint {
+            animation: bounce 2s infinite;
+          }
+          
+          /* Story page specific styling */
+          .story-page {
+            padding: 2rem;
+          }
+          
+          .story-page .image-section {
+            width: 50%;
+            padding-right: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .story-page .text-section {
+            width: 50%;
+            padding-left: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+          }
+          
+          .story-page img {
+            width: 100%;
+            height: auto;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+          }
+          
+          /* Mobile responsive styles */
+          @media screen and (max-width: 768px) {
+            .story-page {
+              flex-direction: column !important;
+              padding: 1rem !important;
+              overflow-y: auto;
+            }
+            
+            .story-page .image-section,
+            .story-page .text-section {
+              width: 100% !important;
+              padding: 0 !important;
+            }
+            
+            .story-page .image-section {
+              margin-bottom: 1.5rem !important;
+              max-height: 40vh;
+            }
+            
+            .story-page .text-section > div:first-child {
+              text-align: center !important;
+            }
+            
+            .story-page .text-section p {
+              font-size: 1.25rem !important;
+              text-align: center !important;
+              line-height: 1.6 !important;
+            }
+            
+            .turn-hint {
+              font-size: 12px !important;
+              bottom: 70px !important;
+              right: 10px !important;
+              padding: 6px 12px !important;
+            }
+            
+            .navigation {
+              bottom: 10px;
+              padding: 8px 16px;
+              gap: 10px;
+            }
+            
+            .nav-btn {
+              padding: 6px 10px;
+              font-size: 14px;
+              min-width: 35px;
+            }
+            
+            .page-indicator {
+              font-size: 12px;
+              min-width: 80px;
+            }
+          }
+          
+          /* Tablet responsive styles */
+          @media screen and (max-width: 1024px) and (min-width: 769px) {
+            .story-page {
+              padding: 1.5rem !important;
+            }
+            
+            .story-page .image-section {
+              padding-right: 1rem !important;
+            }
+            
+            .story-page .text-section {
+              padding-left: 1rem !important;
+            }
+          }
+          
+          /* Hide hints after 10 seconds */
+          .turn-hint {
+            animation: bounce 2s infinite, fadeOut 1s ease-in-out 10s forwards;
+          }
+          
+          @keyframes fadeOut {
+            to {
+              opacity: 0;
+              pointer-events: none;
             }
           }
         </style>
       </head>
       <body>
-        ${coverPageHTML}
-        ${pagesHTML}
+        <div class="storybook-container" id="storybook">
+          ${coverPageHTML}
+          ${pagesHTML}
+        </div>
+        
+        <div class="navigation">
+          <button class="nav-btn" id="prevBtn" onclick="previousPage()">‹</button>
+          <div class="page-indicator">
+            <span id="currentPageText">Cover</span>
+          </div>
+          <div class="page-dots" id="pageDots"></div>
+          <button class="nav-btn" id="nextBtn" onclick="nextPage()">›</button>
+        </div>
+        
+        <script>
+          let currentPage = 0;
+          const totalPages = ${currentStory.pages.length + 1};
+          const container = document.getElementById('storybook');
+          const pages = document.querySelectorAll('.page');
+          
+          // Initialize
+          updateNavigation();
+          createPageDots();
+          updateDisplay();
+          
+          // Touch and mouse events
+          let startX = 0;
+          let startTime = 0;
+          let isDragging = false;
+          
+          container.addEventListener('mousedown', handleStart, { passive: false });
+          container.addEventListener('touchstart', handleStart, { passive: false });
+          container.addEventListener('mousemove', handleMove, { passive: false });
+          container.addEventListener('touchmove', handleMove, { passive: false });
+          container.addEventListener('mouseup', handleEnd, { passive: false });
+          container.addEventListener('touchend', handleEnd, { passive: false });
+          container.addEventListener('click', handleClick, { passive: false });
+          
+          // Keyboard navigation
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              previousPage();
+            }
+            if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              nextPage();
+            }
+          });
+          
+          function handleStart(e) {
+            startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+            startTime = Date.now();
+            isDragging = true;
+          }
+          
+          function handleMove(e) {
+            if (!isDragging) return;
+            // Allow scrolling on mobile for story pages
+            if (window.innerWidth <= 768 && currentPage > 0) {
+              return;
+            }
+            e.preventDefault();
+          }
+          
+          function handleEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            const endX = e.type === 'mouseup' ? e.clientX : e.changedTouches[0].clientX;
+            const diffX = startX - endX;
+            const timeDiff = Date.now() - startTime;
+            
+            // Only trigger page change if it's a quick swipe and significant distance
+            if (Math.abs(diffX) > 50 && timeDiff < 500) {
+              if (diffX > 0) {
+                nextPage();
+              } else {
+                previousPage();
+              }
+            }
+          }
+          
+          function handleClick(e) {
+            if (isDragging) return;
+            
+            // Don't interfere with mobile scrolling
+            if (window.innerWidth <= 768 && currentPage > 0) {
+              return;
+            }
+            
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const width = rect.width;
+            
+            if (x > width * 0.7) {
+              nextPage();
+            } else if (x < width * 0.3) {
+              previousPage();
+            }
+          }
+          
+          function nextPage() {
+            if (currentPage < totalPages - 1) {
+              currentPage++;
+              updateDisplay();
+            }
+          }
+          
+          function previousPage() {
+            if (currentPage > 0) {
+              currentPage--;
+              updateDisplay();
+            }
+          }
+          
+          function goToPage(pageIndex) {
+            if (pageIndex >= 0 && pageIndex < totalPages) {
+              currentPage = pageIndex;
+              updateDisplay();
+            }
+          }
+          
+          function updateDisplay() {
+            const translateX = -currentPage * 100;
+            container.style.transform = \`translateX(\${translateX}vw)\`;
+            
+            // Add turning animation
+            pages.forEach((page, index) => {
+              page.classList.remove('turning');
+              if (index === currentPage - 1 && currentPage > 0) {
+                setTimeout(() => page.classList.add('turning'), 100);
+                setTimeout(() => page.classList.remove('turning'), 600);
+              }
+            });
+            
+            updateNavigation();
+            updatePageDots();
+          }
+          
+          function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const currentPageText = document.getElementById('currentPageText');
+            
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === totalPages - 1;
+            
+            if (currentPage === 0) {
+              currentPageText.textContent = 'Cover';
+            } else {
+              currentPageText.textContent = \`Page \${currentPage}\`;
+            }
+          }
+          
+          function createPageDots() {
+            const dotsContainer = document.getElementById('pageDots');
+            for (let i = 0; i < totalPages; i++) {
+              const dot = document.createElement('div');
+              dot.className = 'dot';
+              if (i === 0) dot.classList.add('active');
+              dot.onclick = () => goToPage(i);
+              dotsContainer.appendChild(dot);
+            }
+          }
+          
+          function updatePageDots() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+              dot.classList.toggle('active', index === currentPage);
+            });
+          }
+          
+          // Handle window resize
+          window.addEventListener('resize', () => {
+            updateDisplay();
+          });
+        </script>
       </body>
       </html>
     `;
